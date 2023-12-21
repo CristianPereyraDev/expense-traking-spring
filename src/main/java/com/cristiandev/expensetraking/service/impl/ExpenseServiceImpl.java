@@ -18,7 +18,6 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Autowired
     public ExpenseServiceImpl(ExpenseRepository expenseRepository) {
         this.expenseRepository = expenseRepository;
-        //this.expenseRepository = new ExpenseRepositoryImplH2(DBConnection.getConnection());
     }
 
     public String createExpense(ExpenseRequestDto expenseRequestDto) throws DaoException {
@@ -43,7 +42,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         return expenseRepository.getAll();
     }
 
-    public List<Expense> getExpensesByCategory(String categoryName) throws DaoException {
+    public List<Expense> getExpensesByCategory(String categoryName) {
         return expenseRepository.getExpensesByCategory(categoryName);
     }
 
