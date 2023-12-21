@@ -3,14 +3,17 @@ package com.cristiandev.expensetraking.repository.impl;
 import com.cristiandev.expensetraking.repository.ExpenseRepository;
 import com.cristiandev.expensetraking.dto.ExpenseDto;
 import com.cristiandev.expensetraking.entities.Expense;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class ExpenseRepositoryImplH2 implements ExpenseRepository {
     private final Connection connection;
-
+    @Autowired
     public ExpenseRepositoryImplH2(Connection connection) {
         //connection = DBConnection.getConnection();
         this.connection = connection;

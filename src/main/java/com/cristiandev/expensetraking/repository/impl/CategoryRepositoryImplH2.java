@@ -4,15 +4,18 @@ import com.cristiandev.expensetraking.config.DBConnection;
 import com.cristiandev.expensetraking.repository.CategoryRepository;
 import com.cristiandev.expensetraking.dto.CategoryDto;
 import com.cristiandev.expensetraking.entities.Category;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.List;
 
+@Repository
 public class CategoryRepositoryImplH2 implements CategoryRepository {
     private final Connection connection;
-
-    public CategoryRepositoryImplH2() {
-        connection = DBConnection.getConnection();
+    @Autowired
+    public CategoryRepositoryImplH2(Connection connection) {
+        this.connection = connection;
     }
     @Override
     public Integer insert(CategoryDto categoryDto) {

@@ -1,16 +1,19 @@
 package com.cristiandev.expensetraking.config;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
+@Configuration
 public class DBConnection {
     private static final String DB_DRIVER = "org.h2.Driver";
-    private static final String DB_URL = "jdbc:h2:~/expenses_db;INIT=RUNSCRIPT FROM 'src/config/data.sql'";
+    private static final String DB_URL = "jdbc:h2:~/expenses_db;INIT=RUNSCRIPT FROM 'src/main/java/com/cristiandev/expensetraking/config/data.sql'";
     private static final String DB_USER = "sa";
     private static final String DB_PASSWORD = "";
-
-    public static Connection getConnection() {
+    @Bean
+    Connection getConnection() {
         Connection connection = null;
         try {
             Class.forName(DB_DRIVER);
