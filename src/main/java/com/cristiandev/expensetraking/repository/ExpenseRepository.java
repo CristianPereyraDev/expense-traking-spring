@@ -4,6 +4,6 @@ import java.util.List;
 import com.cristiandev.expensetraking.dto.ExpenseDto;
 import com.cristiandev.expensetraking.entities.Expense;
 
-public interface ExpenseRepository extends Repository<ExpenseDto, Integer> {
-    List<Expense> getExpensesByCategory(Integer idCategory);
+public interface ExpenseRepository extends Repository<Expense, Long> {
+    List<Expense> getExpensesByCategory(String categoryName);
 }

@@ -1,6 +1,6 @@
 package com.cristiandev.expensetraking;
 
-import com.cristiandev.expensetraking.services.impl.ExpenseServiceImpl;
+import com.cristiandev.expensetraking.service.impl.ExpenseServiceImpl;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;

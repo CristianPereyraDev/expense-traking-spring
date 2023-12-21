@@ -1,9 +1,14 @@
 package com.cristiandev.expensetraking.repository.impl;
 
+import com.cristiandev.expensetraking.entities.Category;
+import com.cristiandev.expensetraking.exceptions.DaoException;
 import com.cristiandev.expensetraking.repository.ExpenseRepository;
-import com.cristiandev.expensetraking.dto.ExpenseDto;
 import com.cristiandev.expensetraking.entities.Expense;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.cristiandev.expensetraking.repository.mappers.CategoryRowMapper;
+import com.cristiandev.expensetraking.repository.mappers.ExpenseRowMapper;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -12,170 +17,76 @@ import java.util.List;
 
 @Repository
 public class ExpenseRepositoryImplH2 implements ExpenseRepository {
-    private final Connection connection;
-    @Autowired
-    public ExpenseRepositoryImplH2(Connection connection) {
-        //connection = DBConnection.getConnection();
-        this.connection = connection;
+    private static final String INSERT_INTO_EXPENSE = "INSERT INTO expense (date, amount, description, category_id, category_name) values (?, ?, ?, ?, ?)";
+    private static final String UPDATE_EXPENSE = "UPDATE expense SET date=?, amount=?, description=?, category_id=? WHERE id=?";
+    private static final String DELETE_FROM_EXPENSE_BY_ID = "DELETE FROM expense WHERE id=?";
+    private static final String SELECT_FROM_EXPENSE_BY_ID = "SELECT * FROM expense WHERE id=?";
+    private static final String SELECT_FROM_EXPENSE_ALL = "SELECT * FROM expense";
+    private static final String INSERT_INTO_CATEGORY = "INSERT INTO category (name) values (?)";
+    private static final String SELECT_FROM_CATEGORY_BY_NAME = "SELECT * FROM category WHERE name=?";
+    private final JdbcTemplate jdbcTemplate;
+
+    public ExpenseRepositoryImplH2(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public Integer insert(ExpenseDto expenseDto) {
-        String sql = "INSERT INTO expense (date, amount, description, categoryId) values (?, ?, ?, ?)";
+    public Integer insert(Expense expense) throws DaoException {
+        Category category;
+        Object[] params = {expense.getCategoryName().toLowerCase()};
+        int[] types = {1};
+
         try {
-            int generatedKey = -1;
-            Expense newExpense = new Expense();
-            newExpense.setAmount(expenseDto.getAmount());
-            newExpense.setDate(expenseDto.getDate());
-            newExpense.setDescription(expenseDto.getDescription());
-            newExpense.setCategoryId(expenseDto.getCategoryId());
-
-            PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setString(1, newExpense.getDate());
-            preparedStatement.setDouble(2, newExpense.getAmount());
-            preparedStatement.setString(3, newExpense.getDescription());
-            preparedStatement.setInt(4, newExpense.getCategoryId());
-
-            preparedStatement.executeUpdate();
-            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                generatedKey = generatedKeys.getInt(1);
-            }
-
-            preparedStatement.close();
-
-            return generatedKey;
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            //throw new RuntimeException(e);
-            return -1;
+            jdbcTemplate.update(INSERT_INTO_CATEGORY, expense.getCategoryName().toLowerCase());
+            category = jdbcTemplate.queryForObject(SELECT_FROM_CATEGORY_BY_NAME, params, types, new CategoryRowMapper());
+        } catch (DuplicateKeyException e) {
+            category = jdbcTemplate.queryForObject(SELECT_FROM_CATEGORY_BY_NAME, params, types, new CategoryRowMapper());
         }
+
+        return jdbcTemplate.update(INSERT_INTO_EXPENSE,
+                expense.getDate(),
+                expense.getAmount(),
+                expense.getDescription(),
+                category.getId(),
+                category.getName()
+        );
     }
 
     @Override
-    public ExpenseDto read(Integer id) {
-        String sql = "SELECT * FROM expense WHERE id=?";
+    public Expense read(Long id) {
+        Object[] params = {id};
+        int[] types = {1};
 
-        try {
-            Expense expense = null;
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-
-            preparedStatement.setInt(1, id);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (resultSet.next()) {
-                expense = new Expense(
-                        resultSet.getInt("id"),
-                        resultSet.getString("date"),
-                        resultSet.getDouble("amount"),
-                        resultSet.getString("description"),
-                        resultSet.getInt("categoryId")
-                        );
-            }
-            preparedStatement.close();
-            resultSet.close();
-
-            if (expense != null) {
-                return new ExpenseDto(
-                    expense.getId(),
-                    expense.getDate(),
-                    expense.getAmount(),
-                    expense.getDescription(),
-                    expense.getCategoryId()
-                );
-            }
-            return null;
-        } catch (SQLException e) {
-            System.out.println("Error getting a register from database: " + e.getMessage());
-            return null;
-        } finally {}
+        return jdbcTemplate.queryForObject(SELECT_FROM_EXPENSE_BY_ID, params, types, new ExpenseRowMapper());
     }
 
     @Override
-    public boolean update(ExpenseDto expenseDto) {
-        String sql = "UPDATE expense SET date=?, amount=?, description=?, categoryId=? WHERE id=?";
-        try {
-            // ExpenseDto map to Expense
-            Expense expense = new Expense(
-                    expenseDto.getId(),
-                    expenseDto.getDate(),
-                    expenseDto.getAmount(),
-                    expenseDto.getDescription(),
-                    expenseDto.getCategoryId()
-            );
-
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, expense.getDate());
-            preparedStatement.setDouble(2, expense.getAmount());
-            preparedStatement.setString(3, expense.getDescription());
-            preparedStatement.setInt(4, expense.getCategoryId());
-            preparedStatement.setInt(5, expense.getId());
-
-            preparedStatement.executeUpdate();
-
-            preparedStatement.close();
-
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
+    public Integer update(Expense expense) {
+        return jdbcTemplate.update(UPDATE_EXPENSE,
+                expense.getDate(),
+                expense.getAmount(),
+                expense.getDescription(),
+                expense.getCategoryId(),
+                expense.getCategoryName()
+        );
     }
 
     @Override
-    public boolean delete(Integer id) {
-        String sql = "DELETE FROM expense WHERE id=?";
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setInt(1, id);
-
-            preparedStatement.executeUpdate();
-
-            preparedStatement.close();
-
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
+    public Integer delete(Long id) {
+        return jdbcTemplate.update(DELETE_FROM_EXPENSE_BY_ID, id);
     }
 
     @Override
-    public List<ExpenseDto> getAll() {
-        List<ExpenseDto> expenseDtoList = new ArrayList<>();
-        String sql = "SELECT * FROM expense";
-
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            while (resultSet.next()) {
-                Expense expense = new Expense(
-                        resultSet.getInt("id"),
-                        resultSet.getString("date"),
-                        resultSet.getDouble("amount"),
-                        resultSet.getString("description"),
-                        resultSet.getInt("categoryId")
-                );
-                expenseDtoList.add(new ExpenseDto(
-                        expense.getId(),
-                        expense.getDate(),
-                        expense.getAmount(),
-                        expense.getDescription(),
-                        expense.getCategoryId())
-                );
-            }
-            preparedStatement.close();
-            resultSet.close();
-
-            return expenseDtoList;
-        } catch (SQLException e) {
-            System.out.println("Error getting a register from database: " + e.getMessage());
-            return null;
-        } finally {}
+    public List<Expense> getAll() {
+        return jdbcTemplate.query(SELECT_FROM_EXPENSE_ALL, new ExpenseRowMapper());
     }
 
     @Override
-    public List<Expense> getExpensesByCategory(Integer idCategory) {
-        return null;
+    public List<Expense> getExpensesByCategory(String categoryName) {
+        String sql = "SELECT * FROM expense WHERE category_name=?";
+        Object[] params = {categoryName};
+        int[] types = {1};
+        return jdbcTemplate.query(sql, params, types, new ExpenseRowMapper());
     }
+
 }

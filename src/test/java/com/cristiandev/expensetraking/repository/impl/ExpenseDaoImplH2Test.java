@@ -1,5 +1,7 @@
 package com.cristiandev.expensetraking.repository.impl;
 
+import com.cristiandev.expensetraking.entities.Expense;
+import com.cristiandev.expensetraking.exceptions.DaoException;
 import com.cristiandev.expensetraking.repository.ExpenseRepository;
 import com.cristiandev.expensetraking.dto.ExpenseDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,23 +24,23 @@ class ExpenseDaoImplH2Test {
     private PreparedStatement preparedStatementMock;
     @Mock
     private ResultSet resultSetMock;
-    private ExpenseRepository expenseDao;
+    private ExpenseRepository expenseRepository;
 
     @BeforeEach
     void setUp() throws SQLException {
         MockitoAnnotations.initMocks(this);
-        expenseDao = new ExpenseRepositoryImplH2(connectionMock);
+        //expenseDao = new ExpenseRepositoryImplH2(connectionMock);
     }
 
     @Test
     @DisplayName("Given a valid ExpenseDto, insert should be add a new register.")
-    void insert_ShouldInsertExpense_WhenValidExpenseDto() throws SQLException {
+    void insert_ShouldInsertExpense_WhenValidExpenseDto() throws SQLException, DaoException {
         // GIVEN
-        ExpenseDto expenseDto = new ExpenseDto();
-        expenseDto.setDate("2023-08-12");
-        expenseDto.setAmount(100.0);
-        expenseDto.setDescription("Expense description");
-        expenseDto.setCategoryId(2);
+        Expense expense = new Expense();
+        expense.setDate("2023-08-12");
+        expense.setAmount(100.0);
+        expense.setDescription("Expense description");
+        expense.setCategoryName("Food");
 
         when(connectionMock.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatementMock);
         when(preparedStatementMock.executeUpdate()).thenReturn(1);
@@ -47,20 +49,20 @@ class ExpenseDaoImplH2Test {
         when(resultSetMock.getInt(1)).thenReturn(1);
 
         // WHEN
-        Integer resultId = expenseDao.insert(expenseDto);
+        Integer resultId = expenseRepository.insert(expense);
 
         // THEN
-        verify(preparedStatementMock).setString(1, expenseDto.getDate());
-        verify(preparedStatementMock).setDouble(2, expenseDto.getAmount());
-        verify(preparedStatementMock).setString(3, expenseDto.getDescription());
-        verify(preparedStatementMock).setInt(4, expenseDto.getCategoryId());
+        verify(preparedStatementMock).setString(1, expense.getDate());
+        verify(preparedStatementMock).setDouble(2, expense.getAmount());
+        verify(preparedStatementMock).setString(3, expense.getDescription());
+        verify(preparedStatementMock).setString(4, expense.getCategoryName());
         verify(preparedStatementMock, times(1)).executeUpdate();
 
         assertEquals(resultId, 1);
     }
 
     @Test
-    void getAll_ShouldReturnListOfExpenseDto_WhenDataBaseHasData() throws SQLException {
+    void getAll_ShouldReturnListOfExpenseDto_WhenDataBaseHasData() throws SQLException, DaoException {
         // GIVEN
         List<ExpenseDto> expectedList = List.of(
             new ExpenseDto("2023-08-12", 100.0, "Expense description", 2),
@@ -77,7 +79,7 @@ class ExpenseDaoImplH2Test {
         when(resultSetMock.getInt("categoryId")).thenReturn(2, 3);
 
         // WHEN
-        List<ExpenseDto> resultList = expenseDao.getAll();
+        List<Expense> resultList = expenseRepository.getAll();
 
         // THEN
         verify(preparedStatementMock).executeQuery();

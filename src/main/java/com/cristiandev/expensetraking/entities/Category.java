@@ -1,19 +1,16 @@
 package com.cristiandev.expensetraking.entities;
 
 public class Category {
-    public static Integer counter = 1;
-    private Integer id;
+    private Long id;
     private String name;
 
     public Category() {
-        this.id = counter;
-        counter++;
+        this.id = 0L;
     }
 
     public Category(String name) {
+        this.id = 0L;
         this.name = name;
-        this.id = counter;
-        counter++;
     }
 
     public String getName() {
@@ -23,11 +20,11 @@ public class Category {
     public void setName(String name) {
         this.name = name;
     }
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

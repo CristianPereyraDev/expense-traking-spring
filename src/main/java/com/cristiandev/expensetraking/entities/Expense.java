@@ -1,30 +1,38 @@
 package com.cristiandev.expensetraking.entities;
 
 public class Expense {
-    public static Integer counter = 1;
-    private Integer id;
+    private Long id;
     private String date;
     private Double amount;
     private String description;
-    private Integer categoryId;
+    private Long categoryId;
+    private String categoryName;
+
     public Expense() {
-        this.id = counter;
         this.amount = 0.0;
-        counter++;
     }
-    public Expense(Integer id, String date, Double amount, String description, Integer categoryId) {
-        this.id = id;
+
+    public Expense(String date, Double amount, String description, String categoryName) {
         this.date = date;
         this.amount = amount;
         this.description = description;
-        this.categoryId = categoryId;
+        this.categoryName = categoryName;
     }
 
-    public Integer getId() {
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -52,22 +60,11 @@ public class Expense {
         this.description = description;
     }
 
-    public Integer getCategoryId() {
+    public Long getCategoryId() {
         return categoryId;
     }
 
-    public void setCategoryId(Integer categoryId) {
+    public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
-    }
-
-    @Override
-    public String toString() {
-        return "Expense{" +
-                "id=" + id +
-                ", date=" + date +
-                ", amount=" + amount +
-                ", description='" + description + '\'' +
-                ", category=" + categoryId +
-                '}';
     }
 }

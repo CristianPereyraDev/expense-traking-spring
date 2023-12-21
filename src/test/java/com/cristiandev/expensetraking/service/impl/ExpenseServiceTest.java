@@ -1,4 +1,4 @@
-package com.cristiandev.expensetraking.services.impl;
+package com.cristiandev.expensetraking.service.impl;
 
 import org.junit.jupiter.api.DisplayName;
 
